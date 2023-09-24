@@ -78,6 +78,41 @@ services:
     deploy:
       restart_policy:
         condition: on-failure
+
+  kong-dev:
+    image: "kong:2.3.2-alpine"
+    user: "kong"
+    depends_on:
+      - db
+    environment:
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: '0.0.0.0:8002'
+      KONG_CASSANDRA_CONTACT_POINTS: db
+      KONG_DATABASE: postgres
+      KONG_PG_DATABASE: kong
+      KONG_PG_HOST: db
+      KONG_PG_USER: kong
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_PG_PASSWORD: kong
+    
+    networks:
+      - kong-net
+    ports:
+      - "8005:8005/tcp"
+      - "127.0.0.1:8002:8002/tcp"
+      - "8445:8445/tcp"
+      - "127.0.0.1:8446:8446/tcp"
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+    restart: on-failure
+    deploy:
+      restart_policy:
+        condition: on-failure        
     
   db:
     image: postgres:9.5
